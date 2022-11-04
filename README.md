@@ -50,3 +50,18 @@ TOKEN_ACCOUNT=9ayApuo1JgnzvkkF8sPfW4YoFJz2hQpFp2EuuPPPju4R
 # Mint some token
 spl-token mint $MINT_ACCOUNT 100
 ```
+
+## 3. Build program
+
+```
+cargo build-sbf --manifest-path=$(pwd)/Cargo.toml --sbf-out-dir=dist/
+```
+
+## 4. Deploy program
+
+```
+solana program deploy dist/mov_swap.so
+
+# Save ProgramID
+PROGRAM_ID=C6xPYMhNcqLwZgfWsSgn2oeBi5URBcdhxCQkfxvKee7B
+```

@@ -81,7 +81,7 @@ impl SwapProcessor {
             return Err(ProgramError::AccountAlreadyInitialized);
         }
 
-        let (pda, _nonce) = Pubkey::find_program_address(&[b"mov-swap"], program_id);
+        let (pda, _nonce) = Pubkey::find_program_address(&[b"mov_swap"], program_id);
         let owner_change_ix = spl_token::instruction::set_authority(
             token_program.key,
             token_funded_account.key,
@@ -149,7 +149,7 @@ impl SwapProcessor {
         **swap_store_account.try_borrow_mut_lamports()? += amount;
         **swap_lamports_account.try_borrow_mut_lamports()? = 0;
 
-        let (pda, nonce) = Pubkey::find_program_address(&[b"mov-swap"], program_id);
+        let (pda, nonce) = Pubkey::find_program_address(&[b"mov_swap"], program_id);
         let transfer_ix = spl_token::instruction::transfer(
             token_program.key,
             token_funded_account.key,
@@ -167,7 +167,7 @@ impl SwapProcessor {
                 pda_account.clone(),
                 token_program.clone(),
             ],
-            &[&[&b"mov-swap"[..], &[nonce]]],
+            &[&[&b"mov_swap"[..], &[nonce]]],
         )?;
 
         swap_store.serialize(&mut &mut swap_store_account.data.borrow_mut()[..])?;

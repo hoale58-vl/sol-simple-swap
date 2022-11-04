@@ -1,10 +1,10 @@
 [package]
-name = "mov-swap"
+name = "mov_swap"
 version = "0.1.0"
-crate-type = ["cdylib", "lib"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+no-entrypoint = []
 
 [dependencies]
 solana-program = "1.14.7"
@@ -12,3 +12,7 @@ spl-token = {version = "3.5", features = ["no-entrypoint"]}
 borsh = "0.9.3"
 borsh-derive = "0.9.1"
 thiserror = "1.0.24"
+
+[lib]
+name = "mov_swap"
+crate-type = ["cdylib", "lib"]
