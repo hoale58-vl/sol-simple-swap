@@ -6,11 +6,13 @@ use solana_program::{
         next_account_info, AccountInfo
     },
     program_error::ProgramError,
+    program::{invoke, invoke_signed},
     msg,
     rent::Rent,
     entrypoint::ProgramResult,
     pubkey::Pubkey,
     sysvar::Sysvar,
+    program_pack::IsInitialized
 };
 use crate::{
     instruction::{
@@ -18,14 +20,11 @@ use crate::{
     },
     error::SwapError::{
         NotRentExempt
-    }
+    },
+    state::SwapStore
 };
 
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
-struct SwapStore {
-    pub admin: Pubkey,
-    pub amount_swapped: u64,
-}
+const SWAP_RATIO: u64 = 10;
 
 pub struct SwapProcessor;
 impl SwapProcessor {
@@ -58,25 +57,57 @@ impl SwapProcessor {
     ) -> ProgramResult {
         let accounts_iter = &mut accounts.iter();
         let creator_account = next_account_info(accounts_iter)?;
-        let store_account = next_account_info(accounts_iter)?;
+        let swap_store_account = next_account_info(accounts_iter)?;
+        let token_funded_account = next_account_info(accounts_iter)?;
+        let token_program = next_account_info(accounts_iter)?;
+
         if !creator_account.is_signer {
             return Err(ProgramError::IncorrectProgramId);
         }
-    
-        if store_account.owner != program_id {
+        if swap_store_account.owner != program_id {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+        if *token_funded_account.owner != spl_token::id() {
             return Err(ProgramError::IncorrectProgramId);
         }
     
-        let input_data = SwapStore {
-            admin: *creator_account.key,
-            amount_swapped: 0,
-        };
-    
-        let rent_exemption = Rent::get()?.minimum_balance(store_account.data_len());
-        if **store_account.lamports.borrow() < rent_exemption {
+        let rent_exemption = Rent::get()?.minimum_balance(swap_store_account.data_len());
+        if **swap_store_account.lamports.borrow() < rent_exemption {
             return Err(NotRentExempt.into());
         }
-        input_data.serialize(&mut &mut store_account.try_borrow_mut_data()?[..])?;
+
+        let swap_store = SwapStore::try_from_slice(*swap_store_account.data.borrow())?;
+        if swap_store.is_initialized() {
+            return Err(ProgramError::AccountAlreadyInitialized);
+        }
+
+        let (pda, _nonce) = Pubkey::find_program_address(&[b"mov-swap"], program_id);
+        let owner_change_ix = spl_token::instruction::set_authority(
+            token_program.key,
+            token_funded_account.key,
+            Some(&pda),
+            spl_token::instruction::AuthorityType::AccountOwner,
+            creator_account.key,
+            &[&creator_account.key],
+        )?;
+
+        msg!("Calling the token program to transfer token account ownership...");
+        invoke(
+            &owner_change_ix,
+            &[
+                token_funded_account.clone(),
+                creator_account.clone(),
+                token_program.clone(),
+            ],
+        )?;
+
+        let swap_store = SwapStore {
+            is_initialized: true,
+            admin: *creator_account.key,
+            amount_swapped: 0,
+            token_funded_account: *token_funded_account.key,
+        };
+        swap_store.serialize(&mut &mut swap_store_account.try_borrow_mut_data()?[..])?;
         Ok(())
     }
 
@@ -84,6 +115,63 @@ impl SwapProcessor {
         accounts: &[AccountInfo],
         program_id: &Pubkey,
     ) -> ProgramResult {
+        let accounts_iter = &mut accounts.iter();
+        let signer_account = next_account_info(accounts_iter)?;
+        let token_funded_account = next_account_info(accounts_iter)?;
+        let receiver_token_account = next_account_info(accounts_iter)?;
+        let swap_lamports_account = next_account_info(accounts_iter)?;
+        let swap_store_account = next_account_info(accounts_iter)?;
+        let token_program = next_account_info(accounts_iter)?;
+        let pda_account = next_account_info(accounts_iter)?;
+
+        if !signer_account.is_signer {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+        if swap_lamports_account.owner != program_id {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+        if swap_store_account.owner != program_id {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+        if *receiver_token_account.owner != spl_token::id() {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+        
+        let mut swap_store = SwapStore::try_from_slice(*swap_store_account.data.borrow())
+            .expect("Error deserialaizing data");
+
+        if swap_store.token_funded_account != *token_funded_account.key {
+            return Err(ProgramError::InvalidAccountData);
+        }
+
+        let amount = **swap_lamports_account.lamports.borrow();
+        swap_store.amount_swapped += amount;
+        **swap_store_account.try_borrow_mut_lamports()? += amount;
+        **swap_lamports_account.try_borrow_mut_lamports()? = 0;
+
+        let (pda, nonce) = Pubkey::find_program_address(&[b"mov-swap"], program_id);
+        let transfer_ix = spl_token::instruction::transfer(
+            token_program.key,
+            token_funded_account.key,
+            receiver_token_account.key,
+            &pda,
+            &[&pda],
+            amount * SWAP_RATIO,
+        )?;
+        msg!("Calling the token program to transfer tokens to the escrow's initializer...");
+        invoke_signed(
+            &transfer_ix,
+            &[
+                token_funded_account.clone(),
+                receiver_token_account.clone(),
+                pda_account.clone(),
+                token_program.clone(),
+            ],
+            &[&[&b"mov-swap"[..], &[nonce]]],
+        )?;
+
+        swap_store.serialize(&mut &mut swap_store_account.data.borrow_mut()[..])?;
+
         Ok(())
     }
 
@@ -93,29 +181,28 @@ impl SwapProcessor {
         program_id: &Pubkey,
     ) -> ProgramResult {
         let accounts_iter = &mut accounts.iter();
-        let store_account = next_account_info(accounts_iter)?;
         let admin_account = next_account_info(accounts_iter)?;
-        if store_account.owner != program_id {
-            return Err(ProgramError::IncorrectProgramId);
-        }
+        let swap_store_account = next_account_info(accounts_iter)?;
         if !admin_account.is_signer {
             return Err(ProgramError::IncorrectProgramId);
         }
+        if swap_store_account.owner != program_id {
+            return Err(ProgramError::IncorrectProgramId);
+        }
 
-        let swap_store = SwapStore::try_from_slice(*store_account.data.borrow())
+        let swap_store = SwapStore::try_from_slice(*swap_store_account.data.borrow())
             .expect("Error deserialaizing data");
 
         if swap_store.admin != *admin_account.key {
-            msg!("Only the account admin can withdraw");
             return Err(ProgramError::InvalidAccountData);
         }
 
-        let rent_exemption = Rent::get()?.minimum_balance(store_account.data_len());
-        if **store_account.lamports.borrow() - rent_exemption < amount {
+        let rent_exemption = Rent::get()?.minimum_balance(swap_store_account.data_len());
+        if **swap_store_account.lamports.borrow() - rent_exemption < amount {
             return Err(ProgramError::InsufficientFunds);
         }
 
-        **store_account.try_borrow_mut_lamports()? -= amount;
+        **swap_store_account.try_borrow_mut_lamports()? -= amount;
         **admin_account.try_borrow_mut_lamports()? += amount;
 
         Ok(())

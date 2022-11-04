@@ -11,6 +11,8 @@ pub enum SwapInstruction {
     ///
     /// 0. `[signer]`   [System Account]    Admin declared in the swap store account
     /// 1. `[writable]` [The swap account]  Store the access control data, funded lamports, swapped amount.
+    /// 2. `[]`         [Token account]     Funded account, hold Swap Token
+    /// 3. `[]`         []                  Token program
     Initialize {},
 
     /// User will swap SOL (lamports) for MOV token at the ratio is 1:10
@@ -19,9 +21,12 @@ pub enum SwapInstruction {
     /// Accounts expected:
     ///
     /// 0. `[signer]`   [System Account]    The account of the person do this swap
-    /// 1. `[writable]` [Token account]     That should be created prior to this instruction, authorized by the initializer. This account will receive MOV
-    /// 2. `[writable]` [The swap account]  It will hold lamports signer using for swapping. This account will transfer SOL (lamports)
-    /// 3. `[]`         [The swap account]  Should be created at the initialized. Store the access control data, funded lamports, swapped amount.
+    /// 1. `[writable]` [Token account]     Funded account, hold Swap Token
+    /// 2. `[writable]` [Token account]     That should be created prior to this instruction, authorized by the initializer. This account will receive MOV
+    /// 3. `[writable]` [System Account]    It will hold lamports signer using for swapping. This account will transfer SOL (lamports)
+    /// 4. `[writable]` [The swap account]  Should be created at the initialized. Store the access control data, funded lamports, swapped amount.
+    /// 5. `[]`         []                  Token program
+    /// 6. `[]`         []                  PDA account - This program account
     Swap {},
 
     /// Admin withdraw swapped SOL (lamports)

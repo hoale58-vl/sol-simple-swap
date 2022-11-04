@@ -10,4 +10,5 @@ edition = "2021"
 solana-program = "1.14.7"
 spl-token = {version = "3.5", features = ["no-entrypoint"]}
 borsh = "0.9.3"
+borsh-derive = "0.9.1"
 thiserror = "1.0.24"
