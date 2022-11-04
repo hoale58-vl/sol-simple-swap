@@ -7,6 +7,8 @@ use solana_program::program_error::ProgramError;
 pub enum SwapError {
     #[error("Invalid Instruction")]
     InvalidInstruction,
+    #[error("Not Rent Exempt")]
+    NotRentExempt,
 }
 
 impl From<SwapError> for ProgramError {

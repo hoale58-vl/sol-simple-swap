@@ -1,5 +1,5 @@
 [package]
-name = "sol-swap"
+name = "mov-swap"
 version = "0.1.0"
 crate-type = ["cdylib", "lib"]
 edition = "2021"
@@ -10,3 +10,4 @@ edition = "2021"
 solana-program = "1.14.7"
 spl-token = {version = "3.5", features = ["no-entrypoint"]}
 borsh = "0.9.3"
+thiserror = "1.0.24"

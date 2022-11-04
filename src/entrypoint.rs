@@ -1,7 +1,6 @@
 // Copyright 2022 HoaLe. All rights reserved.
 
-#![cfg(not(feature = "no-entrypoint"))]
-
+use crate::processor::SwapProcessor;
 use solana_program::{
     account_info::AccountInfo, entrypoint, entrypoint::ProgramResult, pubkey::Pubkey,
 };
@@ -12,5 +11,5 @@ fn process_instruction(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
-    crate::processor::process_instruction(program_id, accounts, instruction_data)
+    SwapProcessor::process(program_id, accounts, instruction_data)
 }
