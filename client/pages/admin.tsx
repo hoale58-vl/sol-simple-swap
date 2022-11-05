@@ -69,6 +69,7 @@ const AdminPage = () => {
             <select onChange={(event) => {
               setSelectedToken(event.target.value);
             }}>
+              <option value=""></option>
               {tokenAccounts.map((accountPubkey) => <option value={accountPubkey}>{accountPubkey}</option>)}
             </select>
 

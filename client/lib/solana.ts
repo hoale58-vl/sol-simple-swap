@@ -12,6 +12,7 @@ import { getFundedAccount, getTokenAccount, getSwapStoreAccount, swapProgramId, 
 import { WithdrawRequest } from "lib/types";
 import { CLUSTER } from "./const";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Buffer } from "buffer";
 
 const cluster = CLUSTER;
 const connection = new Connection(cluster, "confirmed");
@@ -114,7 +115,7 @@ export const initialize = async (fundedAccount: PublicKey) => {
         seed: SWAP_STORE_SEED,
         newAccountPubkey: swapStoreAccount,
         lamports: lamports,
-        space: 129 * 2,
+        space: 129,
         programId: swapProgramId,
     });
 
@@ -127,6 +128,7 @@ export const initialize = async (fundedAccount: PublicKey) => {
             { pubkey: tokenProgramId, isSigner: false, isWritable: false },
         ],
         programId: swapProgramId,
+        data: Buffer.from(new Uint8Array([0]))
     });
 
     const trans = await setPayerAndBlockhashTransaction(
@@ -165,6 +167,7 @@ export const swap = async (mintAccount: PublicKey, amount: number) => {
             { pubkey: swapProgramId, isSigner: false, isWritable: false},
         ],
         programId: swapProgramId,
+        data: Buffer.from(new Uint8Array([1]))
     });
 
     const trans = await setPayerAndBlockhashTransaction(
@@ -181,7 +184,7 @@ export async function withdraw(
     await checkWallet();
     let withdrawRequest = new WithdrawRequest(amount);
     let data = serialize(WithdrawRequest.schema, withdrawRequest);
-    let data_to_send = new Uint8Array([1, ...data]);
+    let data_to_send = new Uint8Array([2, ...data]);
 
     if (wallet.publicKey !== null) {
         const instructionTOOurProgram = new TransactionInstruction({
