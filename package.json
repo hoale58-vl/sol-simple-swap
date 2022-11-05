@@ -1,0 +1,29 @@
+{
+  "name": "sol-swap",
+  "version": "1.0.0",
+  "author": "HoaLe <lvhoa58@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node client/main.ts",
+    "lint": "eslint --ext .ts client/* && prettier --check \"client/**/*.ts\"",
+    "lint:fix": "eslint --ext .ts client/* --fix && prettier --write \"client/**/*.ts\"",
+    "build:program": "cargo build-bpf --manifest-path=./program/Cargo.toml --bpf-out-dir=dist/program",
+    "clean:program": "cargo clean --manifest-path=./program/Cargo.toml && rm -rf ./dist",
+    "test:program": "cargo test-bpf --manifest-path=./program/Cargo.toml",
+    "pretty": "prettier --write '{,client/**/}*.ts'"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.1",
+    "@types/eslint": "^8.4.10",
+    "prettier": "^2.7.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.66.2",
+    "borsh": "^0.7.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
