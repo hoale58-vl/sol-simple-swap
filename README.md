@@ -47,7 +47,7 @@ spl-token create-account $MINT_ACCOUNT
 # Save token account
 TOKEN_ACCOUNT=9ayApuo1JgnzvkkF8sPfW4YoFJz2hQpFp2EuuPPPju4R
 
-# Mint some token
+# Mint funded amount of token
 spl-token mint $MINT_ACCOUNT 100
 ```
 

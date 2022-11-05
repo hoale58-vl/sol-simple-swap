@@ -77,7 +77,7 @@ impl SwapProcessor {
         }
 
         let swap_store = SwapStore::try_from_slice(*swap_store_account.data.borrow())?;
-        if swap_store.is_initialized() {
+        if !swap_store.is_initialized() {
             return Err(ProgramError::AccountAlreadyInitialized);
         }
 

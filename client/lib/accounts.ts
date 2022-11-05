@@ -1,12 +1,13 @@
-import { createInitializeAccountInstruction } from "@solana/spl-token";
+import { createInitializeAccountInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
+import { SWAP_PROGRAM_ID } from "./const";
 
 export const swapProgramId = new PublicKey(
-    process.env.SWAP_PROGRAM_ID!
+    SWAP_PROGRAM_ID
 );
 
 export const tokenProgramId = new PublicKey(
-    process.env.TOKEN_PROGRAM_ID!
+    TOKEN_PROGRAM_ID
 );
 
 export const SWAP_STORE_SEED = "swapStoreAccount";

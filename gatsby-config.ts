@@ -15,6 +15,12 @@ const config: GatsbyConfig = {
   plugins: [
     "gatsby-plugin-sass", 
     {
+      resolve: "gatsby-plugin-root-import",
+      options: {
+        resolveModules: [`${__dirname}/client`],
+      },
+    },
+    {
       resolve: `gatsby-plugin-page-creator`,
       options: {
         path: `${__dirname}/client/pages`,

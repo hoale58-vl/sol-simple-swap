@@ -3,14 +3,17 @@ import {
     SystemProgram,
     Transaction,
     PublicKey,
-    TransactionInstruction
+    TransactionInstruction,
+    ParsedAccountData
 } from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import { serialize } from "borsh";
 import { getFundedAccount, getTokenAccount, getSwapStoreAccount, swapProgramId, SWAP_STORE_SEED, tokenProgramId, getSwapLamportAccount } from "lib/accounts";
 import { WithdrawRequest } from "lib/types";
+import { CLUSTER } from "./const";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-const cluster = process.env.CLUSTER!;
+const cluster = CLUSTER;
 const connection = new Connection(cluster, "confirmed");
 const wallet = new Wallet("https://www.sollet.io", cluster);
 
@@ -44,10 +47,50 @@ export async function signAndSendTransaction(transaction: Transaction) {
     }
 }
 
-async function checkWallet() {
+export async function checkWallet() {
     if (!wallet.connected) {
         await wallet.connect();
     }
+}
+
+export const getAddress = async () : Promise<string | null> =>  {
+    await checkWallet();
+    if (wallet.publicKey === null) {
+        return null;
+    }
+    return wallet.publicKey.toBase58();
+}
+
+export const getAssociatedTokenAccount = async (token: string, owner: string) : Promise<string> =>  {
+    return (await getAssociatedTokenAddress(
+        new PublicKey(token), // mint
+        new PublicKey(owner), // mint
+    )).toString();
+}
+
+export const getMintTokenAccounts = async () : Promise<string[]> =>  {
+    await checkWallet();
+    if (wallet.publicKey === null) {
+        throw new Error("No connected account");
+    }
+    const accounts = await connection.getParsedProgramAccounts(
+        TOKEN_PROGRAM_ID,
+        {
+            filters: [
+              {
+                dataSize: 165, // number of bytes
+              },
+              {
+                memcmp: {
+                  offset: 32, // number of bytes
+                  bytes: wallet.publicKey.toString(), // base58 encoded string
+                },
+              }
+            ],
+            commitment: "recent"
+        }
+    );
+    return accounts.map((account) => (account.account.data as  ParsedAccountData).parsed.info.mint);
 }
 
 export const initialize = async (fundedAccount: PublicKey) => {
@@ -71,7 +114,7 @@ export const initialize = async (fundedAccount: PublicKey) => {
         seed: SWAP_STORE_SEED,
         newAccountPubkey: swapStoreAccount,
         lamports: lamports,
-        space: 129,
+        space: 129 * 2,
         programId: swapProgramId,
     });
 
