@@ -7,8 +7,8 @@ import {
 } from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import { serialize } from "borsh";
-import { getFundedAccount, getTokenAccount, getSwapStoreAccount, swapProgramId, SWAP_STORE_SEED, tokenProgramId, getSwapLamportAccount } from "accounts";
-import { WithdrawRequest } from "types";
+import { getFundedAccount, getTokenAccount, getSwapStoreAccount, swapProgramId, SWAP_STORE_SEED, tokenProgramId, getSwapLamportAccount } from "lib/accounts";
+import { WithdrawRequest } from "lib/types";
 
 const cluster = process.env.CLUSTER!;
 const connection = new Connection(cluster, "confirmed");

@@ -2,9 +2,13 @@
   "name": "sol-swap",
   "version": "1.0.0",
   "author": "HoaLe <lvhoa58@gmail.com>",
+  "private": true,
   "license": "MIT",
   "scripts": {
-    "start": "ts-node client/main.ts",
+    "start:client": "gatsby develop",
+    "build:client": "gatsby build",
+    "serve:client": "gatsby serve",
+    "clean:client": "gatsby clean",
     "lint": "eslint --ext .ts client/* && prettier --check \"client/**/*.ts\"",
     "lint:fix": "eslint --ext .ts client/* --fix && prettier --write \"client/**/*.ts\"",
     "build:program": "cargo build-bpf --manifest-path=./program/Cargo.toml --bpf-out-dir=dist/program",
@@ -15,6 +19,10 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.1",
     "@types/eslint": "^8.4.10",
+    "@types/node": "^17.0.45",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "gatsby-plugin-sass": "^5.24.0",
     "prettier": "^2.7.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
@@ -25,7 +33,9 @@
     "@solana/web3.js": "^1.66.2",
     "borsh": "^0.7.0",
     "dotenv": "^16.0.3",
-    "react": "^18.2.0"
+    "gatsby": "^4.24.7",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
   },
   "engines": {
     "node": ">=14.0.0"
