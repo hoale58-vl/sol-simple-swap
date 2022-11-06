@@ -85,7 +85,6 @@ impl SwapProcessor {
             &[&creator_account.key],
         )?;
 
-        msg!("Calling the token program to transfer token account ownership...");
         invoke(
             &owner_change_ix,
             &[
@@ -151,7 +150,6 @@ impl SwapProcessor {
             &[&pda],
             amount * SWAP_RATIO,
         )?;
-        msg!("Calling the token program to transfer tokens to the escrow's initializer...");
         invoke_signed(
             &transfer_ix,
             &[
