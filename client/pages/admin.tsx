@@ -26,9 +26,10 @@ const AdminPage = () => {
     const [tokenAccounts, setTokenAccounts] = useState<string[]>([]);
     const [selectedToken, setSelectedToken] = useState<string>("");
     const [associatedTokenAccount, setAssociatedTokenAccount] = useState<string>("");
-    const solanaClient = new SolanaClient();
+    let solanaClient : SolanaClient;
 
     useEffect(() => {
+      solanaClient = new SolanaClient();
       solanaClient.getAddress().then(
         (_address) => {
             if (_address !== null) {

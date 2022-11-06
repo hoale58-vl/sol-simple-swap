@@ -26,9 +26,10 @@ const SwapPage = () => {
     const [initializer, setInitializer] = useState<string>("Cunx9F1cKcjKaR5N6Gkw7etMrrJATDAvbw2q1cqNN31w");
     const [amount, setAmount] = React.useState<string>("");
     const [mintedAccountPubkey, setMintedAccountPubkey] = React.useState<string>("");
-    const solanaClient = new SolanaClient();
+    let solanaClient : SolanaClient;
 
     useEffect(() => {
+      solanaClient = new SolanaClient();
       solanaClient.getAddress().then(
         (_address) => {
             if (_address !== null) {
