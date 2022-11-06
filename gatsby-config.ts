@@ -6,7 +6,7 @@ dotenv.config({ path: __dirname+'client/.env' });
 const config: GatsbyConfig = {
   siteMetadata: {
     title: `mov-swap`,
-    siteUrl: `https://hoalv.tk`
+    siteUrl: `https://sol-swap.hoalv.tk`
   },
   // More easily incorporate content into your pages through automatic TypeScript type generation and better GraphQL IntelliSense.
   // If you use VSCode you can also use the GraphQL plugin
@@ -26,6 +26,14 @@ const config: GatsbyConfig = {
         path: `${__dirname}/client/pages`,
       },
     },
+    {
+      resolve: `gatsby-plugin-output`,
+      options: {
+        // default values
+        publicPath: 'public',
+        rmPublicFolder: false
+      }
+    }
   ]
 };
 

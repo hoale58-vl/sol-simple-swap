@@ -1,2 +1,2 @@
-export const SWAP_PROGRAM_ID = "5FhuQPxE82ENZAah7TN49p1ytumQg9zKgjDA2vEoBkaY";
-export const CLUSTER = "http://127.0.0.1:8899";
+export const SWAP_PROGRAM_ID = "E7KLojy35HCjc9r6A5RxpXpWLQ4WjC4zNWgRZ6osCNQ9";
+export const CLUSTER = "https://api.devnet.solana.com";

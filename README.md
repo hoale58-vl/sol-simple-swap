@@ -9,6 +9,17 @@
 - Smart contract have to be deployed to Solana testnet and execute successfully
 
 
+# Devnet deployment information
+
+- ProgramID: E7KLojy35HCjc9r6A5RxpXpWLQ4WjC4zNWgRZ6osCNQ9
+- Token: CkNFHdq5NCs8hQqSmkHCm7qbtijgq1XQKuxZRd8WQJk2
+
+# Live link
+
+- Swap Page: https://sol-swap.hoalv.tk/swap
+- Admin Page: https://sol-swap.hoalv.tk/admin
+- Home Page: https://sol-swap.hoalv.tk/
+
 # Implementation
 
 ## 1. Config cluster and SOLANA account
@@ -39,16 +50,16 @@ DECIMALS=9
 spl-token create-token --decimals=$DECIMALS
 
 # Save token address here
-MINT_ACCOUNT=5QtwP6KYFYrxSpP23qixvd1KjTMGaC8C9PWd7uJ2us1E
+MINT_ACCOUNT=CkNFHdq5NCs8hQqSmkHCm7qbtijgq1XQKuxZRd8WQJk2
 
 # Create token account
 spl-token create-account $MINT_ACCOUNT
 
 # Save token account
-TOKEN_ACCOUNT=9ayApuo1JgnzvkkF8sPfW4YoFJz2hQpFp2EuuPPPju4R
+TOKEN_ACCOUNT=FdVRhSuBjGHsWwX53MFmVhkBPz88JMN6ZgBCMvksh8KR
 
 # Mint funded amount of token
-spl-token mint $MINT_ACCOUNT 100
+spl-token mint $MINT_ACCOUNT 100000000000
 ```
 
 ## 3. Build program
