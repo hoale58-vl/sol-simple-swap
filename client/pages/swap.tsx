@@ -46,7 +46,7 @@ const SwapPage = () => {
           <>
             <p>
               <b>Amount: </b>
-              <input onChange={(event) => {
+              <input value={amount} onChange={(event) => {
                 setAmount(event.target.value);
               }} type="number"></input>
             </p>
@@ -58,7 +58,7 @@ const SwapPage = () => {
             </p>
             <p>
               <b>Token: </b>
-              <input onChange={(event) => {
+              <input value={mintedAccountPubkey} onChange={(event) => {
                 setMintedAccountPubkey(event.target.value);
               }}></input>
             </p>
