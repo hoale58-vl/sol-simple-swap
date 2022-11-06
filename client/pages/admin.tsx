@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Link, HeadFC } from "gatsby"
 import { checkWallet, getAddress, getAssociatedTokenAccount, getMintTokenAccounts, initialize } from "lib/solana"
-import { PublicKey } from "@solana/web3.js"
 
 const pageStyles = {
     color: "#232129",
@@ -78,8 +77,7 @@ const AdminPage = () => {
             </>}
 
             {associatedTokenAccount && <button style={buttonStyles} onClick={() => {
-              const fundedAccount = new PublicKey(associatedTokenAccount);
-              initialize(fundedAccount);
+              initialize(associatedTokenAccount);
             }}>
               Initialize
             </button>}
