@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Link, HeadFC } from "gatsby"
-import { checkWallet, getAddress, getAssociatedTokenAccount, getMintTokenAccounts, initialize } from "lib/solana"
+import { SolanaClient } from "lib/solana"
 
 const pageStyles = {
     color: "#232129",
@@ -26,9 +26,10 @@ const AdminPage = () => {
     const [tokenAccounts, setTokenAccounts] = useState<string[]>([]);
     const [selectedToken, setSelectedToken] = useState<string>("");
     const [associatedTokenAccount, setAssociatedTokenAccount] = useState<string>("");
+    const solanaClient = new SolanaClient();
 
     useEffect(() => {
-      getAddress().then(
+      solanaClient.getAddress().then(
         (_address) => {
             if (_address !== null) {
             setAddress(_address);
@@ -39,7 +40,7 @@ const AdminPage = () => {
 
     useEffect(() => {
       if (address ){
-        getMintTokenAccounts().then((accounts) => {
+        solanaClient.getMintTokenAccounts().then((accounts) => {
           setTokenAccounts(accounts);
         });
       }
@@ -48,7 +49,7 @@ const AdminPage = () => {
     useEffect(() => {
       try {
         if (selectedToken) {
-          getAssociatedTokenAccount(selectedToken, address).then((_address) => {
+          solanaClient.getAssociatedTokenAccount(selectedToken, address).then((_address) => {
             setAssociatedTokenAccount(_address);
           });
         }
@@ -77,14 +78,14 @@ const AdminPage = () => {
             </>}
 
             {associatedTokenAccount && <button style={buttonStyles} onClick={() => {
-              initialize(associatedTokenAccount);
+              solanaClient.initialize(associatedTokenAccount);
             }}>
               Initialize
             </button>}
           </>
         : <>
           <button style={buttonStyles} onClick={() => {
-            checkWallet();
+            solanaClient.checkWallet();
           }}>Connect wallet</button>
         </>
         }

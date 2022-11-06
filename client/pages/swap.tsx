@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Link, HeadFC } from "gatsby"
-import { checkWallet, getAddress, swap } from "lib/solana"
+import { SolanaClient } from "lib/solana"
 import { PublicKey } from "@solana/web3.js"
 
 const pageStyles = {
@@ -26,9 +26,10 @@ const SwapPage = () => {
     const [initializer, setInitializer] = useState<string>("Cunx9F1cKcjKaR5N6Gkw7etMrrJATDAvbw2q1cqNN31w");
     const [amount, setAmount] = React.useState<string>("");
     const [mintedAccountPubkey, setMintedAccountPubkey] = React.useState<string>("");
+    const solanaClient = new SolanaClient();
 
     useEffect(() => {
-      getAddress().then(
+      solanaClient.getAddress().then(
         (_address) => {
             if (_address !== null) {
             setAddress(_address);
@@ -65,7 +66,7 @@ const SwapPage = () => {
               <button style={buttonStyles} onClick={() => {
                 const mintAccount = new PublicKey(mintedAccountPubkey);
                 const initializerAccount = new PublicKey(initializer);
-                swap(initializerAccount, mintAccount, parseInt(amount));
+                solanaClient.swap(initializerAccount, mintAccount, parseInt(amount));
               }}>
                 Swap
               </button>
@@ -73,7 +74,7 @@ const SwapPage = () => {
           </>
           : <>
           <button style={buttonStyles} onClick={() => {
-            checkWallet();
+            solanaClient.checkWallet();
           }}>Connect wallet</button>
           </>
         }
