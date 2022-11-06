@@ -6,20 +6,25 @@ import {
     TransactionInstruction,
     ParsedAccountData
 } from "@solana/web3.js";
-import Wallet from "@project-serum/sol-wallet-adapter";
 import { serialize } from "borsh";
 import { getTokenAccount, getSwapStoreAccount, swapProgramId, SWAP_STORE_SEED, getSwapLamportAccount } from "lib/accounts";
 import { WithdrawRequest } from "lib/types";
-import { CLUSTER } from "./const";
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { SolletWalletAdapter} from "@solana/wallet-adapter-sollet";
+import {
+    WalletAdapterNetwork,
+} from '@solana/wallet-adapter-base';
+import { CLUSTER } from "./const";
 
 export class SolanaClient {
     private connection: Connection;
-    private wallet: Wallet;
+    private wallet: SolletWalletAdapter;
 
     constructor() {
         this.connection = new Connection(CLUSTER, "confirmed");
-        this.wallet = new Wallet("https://www.sollet.io", CLUSTER);
+        this.wallet = new SolletWalletAdapter({
+            network: WalletAdapterNetwork.Devnet,
+        });
     }
 
     async setPayerAndBlockhashTransaction(instructions: TransactionInstruction[]) {

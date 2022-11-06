@@ -21,15 +21,15 @@ const buttonStyles = {
   padding: 20
 }
 
+const solanaClient = new SolanaClient();
+
 const SwapPage = () => {
     const [address, setAddress] = useState<string>("");
     const [initializer, setInitializer] = useState<string>("Cunx9F1cKcjKaR5N6Gkw7etMrrJATDAvbw2q1cqNN31w");
     const [amount, setAmount] = React.useState<string>("1");
     const [mintedAccountPubkey, setMintedAccountPubkey] = React.useState<string>("CkNFHdq5NCs8hQqSmkHCm7qbtijgq1XQKuxZRd8WQJk2");
-    let solanaClient : SolanaClient;
 
     useEffect(() => {
-      solanaClient = new SolanaClient();
       solanaClient.getAddress().then(
         (_address) => {
             if (_address !== null) {

@@ -21,15 +21,15 @@ const headingStyles = {
     maxWidth: 320,
 }
 
+const solanaClient = new SolanaClient();
+
 const AdminPage = () => {
     const [address, setAddress] = useState<string>("");
     const [tokenAccounts, setTokenAccounts] = useState<string[]>([]);
     const [selectedToken, setSelectedToken] = useState<string>("");
     const [associatedTokenAccount, setAssociatedTokenAccount] = useState<string>("");
-    let solanaClient : SolanaClient;
 
     useEffect(() => {
-      solanaClient = new SolanaClient();
       solanaClient.getAddress().then(
         (_address) => {
             if (_address !== null) {
