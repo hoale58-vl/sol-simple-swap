@@ -65,3 +65,22 @@ solana program deploy dist/mov_swap.so
 # Save ProgramID
 PROGRAM_ID=C6xPYMhNcqLwZgfWsSgn2oeBi5URBcdhxCQkfxvKee7B
 ```
+
+## 5. Initializer (fund token to program)
+
+```
+- Go to admin page
+- Select token want to fund
+- Click Initialize button
+- Sign and submit the transaction (using sollet)
+```
+
+## 6. Logged in as user - who want to swap SOL for MOV token
+
+```
+- Go to swap page
+- Input amount of SOL
+- Input the initializer and token want to swap
+- Click swap
+- Sign and submit the transaction (using sollet)
+```

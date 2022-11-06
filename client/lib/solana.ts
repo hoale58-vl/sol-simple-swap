@@ -11,7 +11,7 @@ import { serialize } from "borsh";
 import { getTokenAccount, getSwapStoreAccount, swapProgramId, SWAP_STORE_SEED, getSwapLamportAccount } from "lib/accounts";
 import { WithdrawRequest } from "lib/types";
 import { CLUSTER } from "./const";
-import { getAssociatedTokenAddress, getImmutableOwner, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Buffer } from "buffer";
 
 window.Buffer = Buffer;
@@ -163,8 +163,8 @@ export const swap = async (initializer: PublicKey, mintAccount: PublicKey, amoun
     } catch (e) {
         throw new Error("Invalid swap store account");
     }
-    const { pubkey: fundedAccount, instruction: createFundAccountInstruction } = await getTokenAccount(connection, mintAccount, initializer);
-    if (!createFundAccountInstruction) {
+    const { pubkey: fundedAccount, instruction: createFundAccountInstruction } = await getTokenAccount(connection, initializer, mintAccount);
+    if (createFundAccountInstruction) {
         throw new Error("Not initialized");
     }
     const { pubkey: swapLamportsAccount, instruction: createSwapLamportAccount } = await getSwapLamportAccount(connection, wallet.publicKey, amount);
