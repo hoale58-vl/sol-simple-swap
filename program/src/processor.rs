@@ -12,7 +12,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     pubkey::Pubkey,
     sysvar::Sysvar,
-    program_pack::IsInitialized
 };
 use crate::{
     instruction::{
@@ -40,13 +39,13 @@ impl SwapProcessor {
                 msg!("Instruction: Initialize");
                 Self::process_init(accounts, program_id)
             }
-            SwapInstruction::Withdraw { amount } => {
-                msg!("Instruction: Withdraw");
-                Self::process_withdraw(accounts, amount, program_id)
-            }
             SwapInstruction::Swap { } => {
                 msg!("Instruction: Swap");
                 Self::process_swap(accounts, program_id)
+            }
+            SwapInstruction::Withdraw { amount } => {
+                msg!("Instruction: Withdraw");
+                Self::process_withdraw(accounts, amount, program_id)
             }
         }
     }
@@ -76,11 +75,6 @@ impl SwapProcessor {
             return Err(NotRentExempt.into());
         }
 
-        let swap_store = SwapStore::try_from_slice(*swap_store_account.data.borrow())?;
-        if !swap_store.is_initialized() {
-            return Err(ProgramError::AccountAlreadyInitialized);
-        }
-
         let (pda, _nonce) = Pubkey::find_program_address(&[b"mov_swap"], program_id);
         let owner_change_ix = spl_token::instruction::set_authority(
             token_program.key,
@@ -102,7 +96,6 @@ impl SwapProcessor {
         )?;
 
         let swap_store = SwapStore {
-            is_initialized: true,
             admin: *creator_account.key,
             amount_swapped: 0,
             token_funded_account: *token_funded_account.key,

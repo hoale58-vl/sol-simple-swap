@@ -1,5 +1,7 @@
-import * as React from "react"
+import React, { useEffect, useState } from "react"
 import { Link, HeadFC } from "gatsby"
+import { checkWallet, getAddress, swap } from "lib/solana"
+import { PublicKey } from "@solana/web3.js"
 
 const pageStyles = {
     color: "#232129",
@@ -13,14 +15,70 @@ const headingStyles = {
     maxWidth: 320,
 }
 
+const buttonStyles = {
+  fontSize: 20,
+  margin: 20,
+  padding: 20
+}
+
 const SwapPage = () => {
+    const [address, setAddress] = useState<string>("");
+    const [initializer, setInitializer] = useState<string>("Cunx9F1cKcjKaR5N6Gkw7etMrrJATDAvbw2q1cqNN31w");
+    const [amount, setAmount] = React.useState<string>("");
+    const [mintedAccountPubkey, setMintedAccountPubkey] = React.useState<string>("");
+
+    useEffect(() => {
+      getAddress().then(
+        (_address) => {
+            if (_address !== null) {
+            setAddress(_address);
+          }
+        }
+      );
+    }, []);
+
     return (
       <main style={pageStyles}>
         <h1 style={headingStyles}>Swap page</h1>
-        <p>
-          <br />
-          <Link to="/">Go home</Link>.
-        </p>
+        { address ? 
+          <>
+            <p>
+              <b>Amount: </b>
+              <input onChange={(event) => {
+                setAmount(event.target.value);
+              }} type="number"></input>
+            </p>
+            <p>
+              <b>Initializer: </b>
+              <input value={initializer} onChange={(event) => {
+                setInitializer(event.target.value);
+              }}></input>
+            </p>
+            <p>
+              <b>Token: </b>
+              <input onChange={(event) => {
+                setMintedAccountPubkey(event.target.value);
+              }}></input>
+            </p>
+            
+            {amount && mintedAccountPubkey && <>
+              <button style={buttonStyles} onClick={() => {
+                const mintAccount = new PublicKey(mintedAccountPubkey);
+                const initializerAccount = new PublicKey(initializer);
+                swap(initializerAccount, mintAccount, parseInt(amount));
+              }}>
+                Swap
+              </button>
+            </>}
+          </>
+          : <>
+          <button style={buttonStyles} onClick={() => {
+            checkWallet();
+          }}>Connect wallet</button>
+          </>
+        }
+        <br />
+        <Link to="/">Go home</Link>.
       </main>
     )
   }

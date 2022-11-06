@@ -26,7 +26,7 @@ const AdminPage = () => {
     const [address, setAddress] = useState<string>("");
     const [tokenAccounts, setTokenAccounts] = useState<string[]>([]);
     const [selectedToken, setSelectedToken] = useState<string>("");
-    const [selectedFundedAccount, setSelectedFundedAccount] = useState<string>("");
+    const [associatedTokenAccount, setAssociatedTokenAccount] = useState<string>("");
 
     useEffect(() => {
       getAddress().then(
@@ -50,7 +50,7 @@ const AdminPage = () => {
       try {
         if (selectedToken) {
           getAssociatedTokenAccount(selectedToken, address).then((_address) => {
-            setSelectedFundedAccount(_address);
+            setAssociatedTokenAccount(_address);
           });
         }
       } catch (e) {
@@ -74,12 +74,12 @@ const AdminPage = () => {
             </select>
 
             {selectedToken && <>
-              <p><b>Select associated token account: </b> {selectedFundedAccount ?? "..."}</p>
+              <p><b>Select associated token account: </b> {associatedTokenAccount ?? "..."}</p>
             </>}
 
-            {selectedFundedAccount && <button style={buttonStyles} onClick={() => {
-              const pubKey = new PublicKey(selectedFundedAccount);
-              initialize(pubKey);
+            {associatedTokenAccount && <button style={buttonStyles} onClick={() => {
+              const fundedAccount = new PublicKey(associatedTokenAccount);
+              initialize(fundedAccount);
             }}>
               Initialize
             </button>}

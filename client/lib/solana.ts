@@ -8,12 +8,13 @@ import {
 } from "@solana/web3.js";
 import Wallet from "@project-serum/sol-wallet-adapter";
 import { serialize } from "borsh";
-import { getFundedAccount, getTokenAccount, getSwapStoreAccount, swapProgramId, SWAP_STORE_SEED, tokenProgramId, getSwapLamportAccount } from "lib/accounts";
+import { getTokenAccount, getSwapStoreAccount, swapProgramId, SWAP_STORE_SEED, getSwapLamportAccount } from "lib/accounts";
 import { WithdrawRequest } from "lib/types";
 import { CLUSTER } from "./const";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddress, getImmutableOwner, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Buffer } from "buffer";
 
+window.Buffer = Buffer;
 const cluster = CLUSTER;
 const connection = new Connection(cluster, "confirmed");
 const wallet = new Wallet("https://www.sollet.io", cluster);
@@ -99,43 +100,46 @@ export const initialize = async (fundedAccount: PublicKey) => {
     if (wallet.publicKey === null) {
         throw new Error("No connected account");
     }
+    let instructions: TransactionInstruction[] = [];
     
     // createSwapStoreAccount
     const swapStoreAccount = await getSwapStoreAccount(wallet.publicKey);
-    // rent-exemption swap store
-    // is_initialized - bool - 1
-    // admin - PublicKey - 32
-    // amount_swapped - u64 - 64
-    // token_funded_account - PublicKey - 32
-    const lamports =
-        (await connection.getMinimumBalanceForRentExemption(129));
-    const createProgramAccount = SystemProgram.createAccountWithSeed({
-        fromPubkey: wallet.publicKey,
-        basePubkey: wallet.publicKey,
-        seed: SWAP_STORE_SEED,
-        newAccountPubkey: swapStoreAccount,
-        lamports: lamports,
-        space: 129,
-        programId: swapProgramId,
-    });
+    const info = await connection.getAccountInfo(swapStoreAccount);
+
+    if (!info) {
+        // rent-exemption swap store
+        // admin - PublicKey - 32
+        // amount_swapped - u64 - 8
+        // token_funded_account - PublicKey - 32
+        const lamports =
+            (await connection.getMinimumBalanceForRentExemption(72));
+        const createSwapStoreAccount = SystemProgram.createAccountWithSeed({
+            fromPubkey: wallet.publicKey,
+            basePubkey: wallet.publicKey,
+            seed: SWAP_STORE_SEED,
+            newAccountPubkey: swapStoreAccount,
+            lamports: lamports,
+            space: 72,
+            programId: swapProgramId,
+        });
+        instructions.push(createSwapStoreAccount);
+    }
 
     // initialize swap
     const initializeInstruction = new TransactionInstruction({
         keys: [
             { pubkey: wallet.publicKey, isSigner: true, isWritable: false },
             { pubkey: swapStoreAccount, isSigner: false, isWritable: true },
-            { pubkey: fundedAccount, isSigner: false, isWritable: false },
-            { pubkey: tokenProgramId, isSigner: false, isWritable: false },
+            { pubkey: fundedAccount, isSigner: false, isWritable: true },
+            { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
         ],
         programId: swapProgramId,
         data: Buffer.from(new Uint8Array([0]))
     });
-
+    
+    instructions.push(initializeInstruction);
     const trans = await setPayerAndBlockhashTransaction(
-        [
-            createProgramAccount, 
-            initializeInstruction
-        ]
+        instructions
     );
     const signature = await signAndSendTransaction(trans);
     const result = await connection.confirmTransaction(signature);
@@ -144,17 +148,34 @@ export const initialize = async (fundedAccount: PublicKey) => {
 
 /// Mint account: SPL Token account pubkey
 /// Amount: Amount of SPL Token
-export const swap = async (mintAccount: PublicKey, amount: number) => {
+export const swap = async (initializer: PublicKey, mintAccount: PublicKey, amount: number) => {
     await checkWallet();
     if (wallet.publicKey === null) {
         throw new Error("No connected account");
     }
-    const nonce = (await connection.getNonce(wallet.publicKey))?.nonce ?? "0";
+    let instructions: TransactionInstruction[] = [];
 
-    const swapStoreAccount = await getSwapStoreAccount(wallet.publicKey);
-    const fundedAccount = await getFundedAccount(wallet.publicKey);
-    const { pubkey: swapLamportsAccount, instruction: createSwapLamportAccount } = await getSwapLamportAccount(wallet.publicKey, amount, nonce);
-    const { pubkey: tokenReceiverAccount, instruction: createTokenReceiverAccountInstruction } = await getTokenAccount(wallet.publicKey, mintAccount, nonce);
+    // TODO: not use wallet publicKey
+    const swapStoreAccount = await getSwapStoreAccount(initializer);
+    try {
+        const info = await connection.getAccountInfo(swapStoreAccount);
+        console.log(info, swapStoreAccount.toBase58());
+    } catch (e) {
+        throw new Error("Invalid swap store account");
+    }
+    const { pubkey: fundedAccount, instruction: createFundAccountInstruction } = await getTokenAccount(connection, mintAccount, initializer);
+    if (!createFundAccountInstruction) {
+        throw new Error("Not initialized");
+    }
+    const { pubkey: swapLamportsAccount, instruction: createSwapLamportAccount } = await getSwapLamportAccount(connection, wallet.publicKey, amount);
+    if (createSwapLamportAccount) {
+        instructions.push(createSwapLamportAccount);
+    }
+
+    const { pubkey: tokenReceiverAccount, instruction: createTokenReceiverAccountInstruction } = await getTokenAccount(connection, wallet.publicKey, mintAccount);
+    if (createTokenReceiverAccountInstruction) {
+        instructions.push(createTokenReceiverAccountInstruction);
+    }
 
     const swapInstruction = new TransactionInstruction({
         keys: [
@@ -163,16 +184,14 @@ export const swap = async (mintAccount: PublicKey, amount: number) => {
             { pubkey: tokenReceiverAccount, isSigner: false, isWritable: true },
             { pubkey: swapLamportsAccount, isSigner: false, isWritable: true },
             { pubkey: swapStoreAccount, isSigner: false, isWritable: true },
-            { pubkey: tokenProgramId, isSigner: false, isWritable: false},
+            { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false},
             { pubkey: swapProgramId, isSigner: false, isWritable: false},
         ],
         programId: swapProgramId,
         data: Buffer.from(new Uint8Array([1]))
     });
-
-    const trans = await setPayerAndBlockhashTransaction(
-        [createSwapLamportAccount, createTokenReceiverAccountInstruction, swapInstruction]
-    );
+    instructions.push(swapInstruction);
+    const trans = await setPayerAndBlockhashTransaction(instructions);
     const signature = await signAndSendTransaction(trans);
     const result = await connection.confirmTransaction(signature);
     console.log("end sendMessage", result);

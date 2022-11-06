@@ -35,7 +35,7 @@ solana balance
 cargo install spl-token-cli
 
 # Initialize Mint Account
-DECIMALS=10
+DECIMALS=9
 spl-token create-token --decimals=$DECIMALS
 
 # Save token address here
